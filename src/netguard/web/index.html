@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetGuard - Network Monitoring Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>NetGuard</h1>
+                    <p>Network Monitoring Dashboard</p>
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Devices</span>
+                    <span class="stat-value" id="deviceCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Readings</span>
+                    <span class="stat-value" id="readingCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Alerts</span>
+                    <span class="stat-value" id="alertCount">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Left Panel - Controls -->
+        <aside class="left-panel">
+            <!-- Device Selection Card -->
+            <div class="card">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    <h2>Device Selection</h2>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="deviceSelect">Select Device</label>
+                        <select id="deviceSelect" class="form-control">
+                            <option value="">Loading devices...</option>
+                        </select>
+                    </div>
+                    <button id="readMetricsBtn" class="btn btn-primary" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        Read Device Metrics
+                    </button>
+                </div>
+            </div>
+
+            <!-- Notification Config Card -->
+            <div class="card">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    <h2>Notification Settings</h2>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="channelSelect">Notification Channel</label>
+                        <select id="channelSelect" class="form-control">
+                            <option value="sms">SMS</option>
+                            <option value="email" selected>Email</option>
+                            <option value="push">Dashboard Push</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="recipientInput">Recipient</label>
+                        <input type="text" id="recipientInput" class="form-control" 
+                               placeholder="ops@netguard.example.com" value="ops@netguard.example.com">
+                    </div>
+                    <button id="evaluateBtn" class="btn btn-success" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Evaluate & Notify
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Panel - Metrics -->
+        <section class="center-panel">
+            <!-- Metrics Cards -->
+            <div class="metrics-grid">
+                <div class="metric-card" id="bandwidthCard">
+                    <div class="metric-icon bandwidth">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                        </svg>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Bandwidth</span>
+                        <span class="metric-value" id="bandwidthValue">--</span>
+                        <span class="metric-unit">Mbps</span>
+                    </div>
+                </div>
+
+                <div class="metric-card" id="packetLossCard">
+                    <div class="metric-icon packet-loss">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Packet Loss</span>
+                        <span class="metric-value" id="packetLossValue">--</span>
+                        <span class="metric-unit">%</span>
+                    </div>
+                </div>
+
+                <div class="metric-card" id="latencyCard">
+                    <div class="metric-icon latency">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Latency</span>
+                        <span class="metric-value" id="latencyValue">--</span>
+                        <span class="metric-unit">ms</span>
+                    </div>
+                </div>
+
+                <div class="metric-card" id="statusCard">
+                    <div class="metric-icon status">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Status</span>
+                        <span class="metric-value" id="statusValue">--</span>
+                        <span class="metric-unit"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Device Details Card -->
+            <div class="card device-details-card">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                    <h2>Device Details</h2>
+                </div>
+                <div class="card-body">
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Device ID</span>
+                            <span class="detail-value" id="detailDeviceId">--</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Device Name</span>
+                            <span class="detail-value" id="detailDeviceName">--</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Vendor</span>
+                            <span class="detail-value" id="detailVendor">--</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Type</span>
+                            <span class="detail-value" id="detailType">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Panel - Activity Log -->
+        <aside class="right-panel">
+            <div class="card log-card">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                    <h2>Activity Log</h2>
+                    <button id="clearLogBtn" class="btn-icon" title="Clear Log">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="log-container" id="logContainer">
+                        <div class="log-entry log-info">
+                            <span class="log-time">--:--:--</span>
+                            <span class="log-message">System ready. Select a device to begin.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <span class="footer-text">NetGuard v2.0 - Adapter + Bridge Design Patterns</span>
+            <span class="footer-status" id="footerStatus">Server Online</span>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <span class="loading-text">Processing...</span>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

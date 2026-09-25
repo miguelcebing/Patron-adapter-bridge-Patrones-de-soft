@@ -5,7 +5,11 @@ import netguard.devices.NetworkDevice;
 import netguard.devices.adapters.CiscoRouterAdapter;
 import netguard.devices.adapters.JuniperSwitchAdapter;
 import netguard.devices.adapters.OpenFirewallAdapter;
-import netguard.gui.NetGuardDashboard;
+import netguard.server.WebServer;
+
+import java.awt.Desktop;
+import java.io.IOException;
+import java.net.URI;
 
 /**
  * NetGuard - Network Monitoring System
@@ -25,9 +29,11 @@ import netguard.gui.NetGuardDashboard;
  *    - Avoids class explosion (2 types × 3 channels = 6 classes)
  *    - Instead: 2 + 3 = 5 classes (linear growth)
  * 
- * Run this class to launch the Swing GUI dashboard.
+ * Run this class to launch the web-based dashboard.
  */
 public class Main {
+    
+    private static final int PORT = 8080;
     
     public static void main(String[] args) {
         System.out.println("╔══════════════════════════════════════════════════════════════╗");
@@ -55,33 +61,65 @@ public class Main {
         System.out.println("=== System Ready ===");
         System.out.println(monitoringSystem.getSystemSummary());
         
-        // Launch the Swing GUI
-        System.out.println("Launching NetGuard Dashboard...");
+        // Start the web server
+        System.out.println("Starting NetGuard Web Server...");
         
-        // Run GUI on Event Dispatch Thread
-        javax.swing.SwingUtilities.invokeLater(() -> {
-            try {
-                // Try to set FlatLaf look and feel for modern UI
-                // Falls back to system L&F if FlatLaf not available
-                try {
-                    Class.forName("com.formdev.flatlaf.FlatDarkLaf");
-                    javax.swing.UIManager.setLookAndFeel(new com.formdev.flatlaf.FlatDarkLaf());
-                    System.out.println("Using FlatLaf Dark theme");
-                } catch (ClassNotFoundException e) {
-                    // FlatLaf not available, use system default
-                    javax.swing.UIManager.setLookAndFeel(
-                        javax.swing.UIManager.getSystemLookAndFeelClassName());
-                    System.out.println("Using system look and feel");
-                }
-            } catch (Exception e) {
-                System.err.println("Failed to set look and feel: " + e.getMessage());
-            }
+        try {
+            WebServer webServer = new WebServer(monitoringSystem, PORT);
+            webServer.start();
             
-            NetGuardDashboard dashboard = new NetGuardDashboard(monitoringSystem);
-            dashboard.setVisible(true);
+            // Open browser automatically
+            openBrowser(webServer.getServerUrl());
             
             System.out.println("\n=== Dashboard Launched ===");
-            System.out.println("Use the GUI to interact with the monitoring system.");
-        });
+            System.out.println("Open your browser and navigate to: " + webServer.getServerUrl());
+            System.out.println("Press Ctrl+C to stop the server.");
+            
+            // Keep the application running
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                System.out.println("\nShutting down NetGuard...");
+                webServer.stop();
+                System.out.println("Goodbye!");
+            }));
+            
+        } catch (IOException e) {
+            System.err.println("Failed to start web server: " + e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+    
+    /**
+     * Open the default web browser
+     * 
+     * @param url The URL to open
+     */
+    private static void openBrowser(String url) {
+        try {
+            if (Desktop.isDesktopSupported()) {
+                Desktop desktop = Desktop.getDesktop();
+                if (desktop.isSupported(Desktop.Action.BROWSE)) {
+                    desktop.browse(new URI(url));
+                    System.out.println("Opening browser at: " + url);
+                    return;
+                }
+            }
+            
+            // Fallback: try to open browser using system commands
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("win")) {
+                Runtime.getRuntime().exec("cmd /c start " + url);
+            } else if (os.contains("mac")) {
+                Runtime.getRuntime().exec("open " + url);
+            } else {
+                Runtime.getRuntime().exec("xdg-open " + url);
+            }
+            
+            System.out.println("Opening browser at: " + url);
+            
+        } catch (Exception e) {
+            System.out.println("Could not open browser automatically.");
+            System.out.println("Please open: " + url);
+        }
     }
 }
